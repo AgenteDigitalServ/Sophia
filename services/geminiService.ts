@@ -172,19 +172,20 @@ export async function generateQuoteImage(quoteText: string): Promise<string> {
         const ai = getAiClient();
 
         // Step 1: Generate a visual prompt (Text model - Free friendly)
-        // Melhoria: Pedimos explicitamente uma descrição física e simbólica, não abstrata.
+        // Refinado para evitar texto e focar em planos de fundo
         const descriptionResponse = await withRetry<GenerateContentResponse>(() => ai.models.generateContent({
             model: "gemini-2.5-flash",
-            contents: `Crie um prompt para geração de imagem baseado nesta citação:
+            contents: `Atue como um Diretor de Arte. Crie um prompt descritivo para uma IMAGEM DE FUNDO (Wallpaper) baseada nesta citação:
             "${quoteText}"
             
-            Sua tarefa: Descreva uma única cena cinematográfica e metafórica que capture a essência dessa frase.
+            Objetivo: A imagem servirá de fundo para um texto branco sobreposto. Ela deve ser limpa, atmosférica e SEM TEXTOS ou NÚMEROS na cena.
             
-            Regras Estritas para o Prompt:
+            Regras Estritas:
             1. Responda APENAS com o prompt em INGLÊS.
-            2. NÃO descreva conceitos abstratos. Descreva OBJETOS FÍSICOS, AMBIENTES, CLIMA e ILUMINAÇÃO.
-            3. Exemplo Ruim: "Solidão e tristeza". Exemplo Bom: "Um banco de madeira vazio em um parque sob chuva forte à noite, iluminado por um único poste de luz amarela".
-            4. Mantenha curto: máximo 2 frases.`,
+            2. Foco visual: Paisagens, Natureza, Texturas Abstratas, Jogos de Luz e Sombra, Macrofotografia, Céu, Água.
+            3. PROIBIDO: Placas, Sinais, Livros com letras, Relógios digitais, Claquetes de cinema, Jornais, Telas com dados.
+            4. Estilo: Minimalista, Cinemático, Fotorealista, Profundidade de campo suave (Blur no fundo).
+            5. Mantenha curto (max 25 palavras).`,
         }));
         
         const visualPrompt = descriptionResponse.text?.trim();
@@ -194,8 +195,8 @@ export async function generateQuoteImage(quoteText: string): Promise<string> {
         }
 
         // Step 2: Generate the image (Image model - Billing required)
-        // Style: Cinematographic, Intimate, 4K, Highly Detailed, Moody
-        const fullImagePrompt = `Cinematographic shot, ${visualPrompt}. Atmospheric, moody lighting, 8k, photorealistic, shallow depth of field. NO TEXT, NO WATERMARKS.`;
+        // Reforçando negative prompts no próprio prompt positivo
+        const fullImagePrompt = `Cinematographic background wallpaper, ${visualPrompt}. Soft focus, blurry background, negative space, moody lighting, 8k, photorealistic. NO TEXT, NO NUMBERS, NO WRITING, NO WATERMARKS, NO SIGNATURES.`;
 
         const response = await withRetry<any>(() => ai.models.generateImages({
             model: 'imagen-4.0-generate-001',

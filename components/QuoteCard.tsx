@@ -119,8 +119,8 @@ export const QuoteCard: React.FC<QuoteCardProps> = ({ quote, isFavorite = false,
             </div>
         )}
         
-        {/* Overlay Escuro */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/50 to-black/30 z-0"></div>
+        {/* Overlay Escuro Mais Robusto para Legibilidade */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/60 to-black/40 z-0"></div>
         
         {/* Conteúdo de Texto */}
         <div className="absolute inset-0 flex flex-col justify-center items-center p-8 text-white text-center h-full z-10">
