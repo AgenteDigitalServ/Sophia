@@ -108,7 +108,8 @@ export const QuoteCard: React.FC<QuoteCardProps> = ({ quote, isFavorite = false,
             <img 
                 src={imgSrc} 
                 alt={`Citação de ${quote.author}`} 
-                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${isImageReady ? 'opacity-100' : 'opacity-0'}`}
+                // Alterações aqui: Removido blur e scale, aumentado opacity para nitidez HD
+                className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ${isImageReady ? 'opacity-90' : 'opacity-0'}`}
             />
         ) : null}
 

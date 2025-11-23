@@ -77,6 +77,45 @@ const cleanJsonString = (str: string | undefined): string => {
   return cleaned.trim();
 };
 
+// ==========================================
+// SERVIÇO PEXELS (FALLBACK)
+// ==========================================
+async function fetchPexelsImage(query: string): Promise<string | null> {
+    const pexelsKey = process.env.PEXELS_API_KEY;
+    
+    if (!pexelsKey) {
+        console.warn("Chave da API do Pexels não configurada. Pulando fallback Pexels.");
+        return null;
+    }
+
+    try {
+        console.log(`Buscando no Pexels por: ${query}`);
+        const response = await fetch(`https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=1&orientation=portrait&size=large`, {
+            headers: {
+                Authorization: pexelsKey
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Pexels API Error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        if (data.photos && data.photos.length > 0) {
+            // Retorna a imagem large2x (boa qualidade)
+            return data.photos[0].src.large2x;
+        }
+        return null;
+    } catch (error) {
+        console.error("Erro ao buscar imagem no Pexels:", error);
+        return null;
+    }
+}
+
+// ==========================================
+// SERVIÇOS GEMINI (TEXTO)
+// ==========================================
+
 export async function getPhilosophicalQuotes(theme: string): Promise<Quote[]> {
   const ai = getAiClient();
   
@@ -166,58 +205,97 @@ export async function getQuoteOfTheDay(): Promise<Quote> {
   };
 }
 
+// ==========================================
+// GERAÇÃO DE IMAGEM (AI + FALLBACK PEXELS)
+// ==========================================
 
 export async function generateQuoteImage(quoteText: string): Promise<string> {
+    const ai = getAiClient();
+    let searchKeywords = "abstract nature"; // Padrão
+
     try {
-        const ai = getAiClient();
-
-        // Step 1: Generate a visual prompt (Text model - Free friendly)
-        // Refinado para evitar texto e focar em planos de fundo
-        const descriptionResponse = await withRetry<GenerateContentResponse>(() => ai.models.generateContent({
+        // Passo 1: Analisar a citação para criar um prompt visual coerente e palavras-chave
+        const promptAnalysisResponse = await withRetry<GenerateContentResponse>(() => ai.models.generateContent({
             model: "gemini-2.5-flash",
-            contents: `Atue como um Diretor de Arte. Crie um prompt descritivo para uma IMAGEM DE FUNDO (Wallpaper) baseada nesta citação:
-            "${quoteText}"
+            contents: `Analyze this quote: "${quoteText}"
             
-            Objetivo: A imagem servirá de fundo para um texto branco sobreposto. Ela deve ser limpa, atmosférica e SEM TEXTOS ou NÚMEROS na cena.
+            Task:
+            1. Create a "visual_prompt" for an AI Image Generator. It must be METAPHORICAL and ATMOSPHERIC.
+               - Example: Quote about "Time" -> Visual: "An ancient hourglass buried in sand dunes at sunset".
+               - Example: Quote about "Hope" -> Visual: "A single small sprout growing from a crack in a dark concrete wall, ray of light".
+               - STYLE: Cinematic, Photorealistic, 8k, Dramatic Lighting.
+               - STRICTLY NO TEXT, NO LETTERS.
+
+            2. Create "search_keywords" for a stock photo site (Pexels).
+               - 2 to 3 English keywords that capture the mood/subject.
             
-            Regras Estritas:
-            1. Responda APENAS com o prompt em INGLÊS.
-            2. Foco visual: Paisagens, Natureza, Texturas Abstratas, Jogos de Luz e Sombra, Macrofotografia, Céu, Água.
-            3. PROIBIDO: Placas, Sinais, Livros com letras, Relógios digitais, Claquetes de cinema, Jornais, Telas com dados.
-            4. Estilo: Minimalista, Cinemático, Fotorealista, Profundidade de campo suave (Blur no fundo).
-            5. Mantenha curto (max 25 palavras).`,
-        }));
-        
-        const visualPrompt = descriptionResponse.text?.trim();
-        if (!visualPrompt) {
-            console.warn("Falha ao gerar prompt visual, usando imagem padrão.");
-            return getRandomFallbackImage();
-        }
-
-        // Step 2: Generate the image (Image model - Billing required)
-        // Reforçando negative prompts no próprio prompt positivo
-        const fullImagePrompt = `Cinematographic background wallpaper, ${visualPrompt}. Soft focus, blurry background, negative space, moody lighting, 8k, photorealistic. NO TEXT, NO NUMBERS, NO WRITING, NO WATERMARKS, NO SIGNATURES.`;
-
-        const response = await withRetry<any>(() => ai.models.generateImages({
-            model: 'imagen-4.0-generate-001',
-            prompt: fullImagePrompt,
+            Output JSON format only.`,
             config: {
-                numberOfImages: 1,
-                aspectRatio: '9:16',
-                outputMimeType: 'image/jpeg',
-            },
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        visual_prompt: { type: Type.STRING },
+                        search_keywords: { type: Type.STRING }
+                    }
+                }
+            }
         }));
 
-        if (!response.generatedImages?.[0]?.image?.imageBytes) {
-            throw new Error("API de Imagem não retornou dados.");
-        }
+        const analysisData = JSON.parse(cleanJsonString(promptAnalysisResponse.text));
+        const visualPrompt = analysisData.visual_prompt;
+        searchKeywords = analysisData.search_keywords || "nature abstract";
 
-        const base64ImageBytes = response.generatedImages[0].image.imageBytes;
-        return `data:image/jpeg;base64,${base64ImageBytes}`;
+        // Passo 2: Tentar gerar imagem com Nano Banana (Gemini 2.5 Flash Image)
+        // Prompt final blindado para nitidez e HD
+        const fullImagePrompt = `${visualPrompt}, photorealistic, sharp focus, 8k, highly detailed, HD. NO TEXT, NO WATERMARKS, NO SIGNATURES, NO TYPOGRAPHY.`;
+
+        try {
+            const response = await withRetry<GenerateContentResponse>(() => ai.models.generateContent({
+                model: 'gemini-2.5-flash-image',
+                contents: {
+                  parts: [{ text: fullImagePrompt }]
+                },
+                config: {
+                    // @ts-ignore
+                    imageConfig: {
+                        aspectRatio: "9:16",
+                    }
+                },
+            }));
+
+            let base64ImageBytes: string | null = null;
+            if (response.candidates?.[0]?.content?.parts) {
+              for (const part of response.candidates[0].content.parts) {
+                if (part.inlineData && part.inlineData.data) {
+                  base64ImageBytes = part.inlineData.data;
+                  break;
+                }
+              }
+            }
+
+            if (base64ImageBytes) {
+                return `data:image/jpeg;base64,${base64ImageBytes}`;
+            }
+            throw new Error("Dados de imagem não encontrados na resposta da IA.");
+
+        } catch (aiError) {
+            console.warn("Falha na geração IA (Nano Banana). Tentando Pexels...", aiError);
+            // Se falhar a geração IA, lança erro para cair no catch abaixo e tentar Pexels
+            throw aiError;
+        }
 
     } catch (error: any) {
-        // Se der erro (especialmente erro 400 de faturamento/billing ou 503 persistente), usamos o fallback
-        console.warn("Erro na geração de imagem (API Imagen ou Overload). Usando imagem de fallback.", error.message);
+        // Passo 3: Fallback para Pexels se a IA falhar (Ex: Billing, Cota, Erro 500)
+        console.log("Tentando fallback via Pexels com keywords:", searchKeywords);
+        
+        const pexelsImage = await fetchPexelsImage(searchKeywords);
+        if (pexelsImage) {
+            return pexelsImage;
+        }
+
+        // Passo 4: Fallback final (Imagens Hardcoded)
+        console.warn("Falha total (IA e Pexels). Usando imagem estática.", error.message);
         return getRandomFallbackImage();
     }
 }
