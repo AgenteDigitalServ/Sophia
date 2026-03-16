@@ -32,7 +32,11 @@ const App: React.FC = () => {
       const quote = await getRandomQuote();
       setRandomQuote(quote);
     } catch (err: any) {
-      setError("Não foi possível carregar a sugestão do dia.");
+      if (err.message === "API_KEY_MISSING") {
+        setError("Configuração pendente: Chave de API não configurada.");
+      } else {
+        setError("Não foi possível carregar a sugestão do dia.");
+      }
     } finally {
       setIsRandomLoading(false);
     }
@@ -114,7 +118,11 @@ const App: React.FC = () => {
       });
     } catch (err: any) {
       console.error("Erro na busca:", err);
-      setError("Ocorreu um erro ao buscar sabedoria.");
+      if (err.message === "API_KEY_MISSING") {
+        setError("Configuração pendente: Chave de API não configurada no servidor.");
+      } else {
+        setError("Ocorreu um erro ao buscar sabedoria.");
+      }
       setIsLoading(false);
     }
   }, [searchTerm, resetToHome]);
