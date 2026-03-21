@@ -3,14 +3,14 @@ import { GoogleGenAI, Type, GenerateContentResponse, ThinkingLevel } from "@goog
 import type { Quote } from '../types';
 
 const FALLBACK_IMAGES = [
-  "https://images.unsplash.com/photo-1507502707541-f369a3b18502?q=80&w=1080&auto=format&fit=crop", 
-  "https://images.unsplash.com/photo-1516466723877-e4ec1d736c8a?q=80&w=1080&auto=format&fit=crop", 
-  "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?q=80&w=1080&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=1080&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=1080&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1490730141103-6cac27aaab94?q=80&w=1080&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=1080&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=1080&auto=format&fit=crop"
+  "https://images.unsplash.com/photo-1507502707541-f369a3b18502?q=80&w=1080&h=1920&auto=format&fit=crop", 
+  "https://images.unsplash.com/photo-1516466723877-e4ec1d736c8a?q=80&w=1080&h=1920&auto=format&fit=crop", 
+  "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?q=80&w=1080&h=1920&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=1080&h=1920&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=1080&h=1920&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1490730141103-6cac27aaab94?q=80&w=1080&h=1920&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=1080&h=1920&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=1080&h=1920&auto=format&fit=crop"
 ];
 
 const PEXELS_API_KEY = "0jlOztyKr3RcmCGI4otTNAzcAa4EvwQjuhYdwsGkrwdlueL4uUIn1Wh5";
@@ -68,14 +68,17 @@ async function getPexelsImage(): Promise<string> {
 const generateId = () => Date.now().toString(36) + Math.random().toString(36).substring(2);
 
 const getAIInstance = () => {
-  const apiKey = process.env.GEMINI_API_KEY || "";
-  // Não lançamos erro aqui para permitir que o app carregue a UI, mesmo sem a chave.
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    console.warn("Sophia: GEMINI_API_KEY não encontrada.");
+    return null;
+  }
   return new GoogleGenAI({ apiKey });
 };
 
 export async function getRandomQuote(): Promise<Quote> {
   const ai = getAIInstance();
-  if (!process.env.GEMINI_API_KEY) throw new Error("API_KEY_MISSING");
+  if (!ai) throw new Error("API_KEY_MISSING");
 
   const response = await ai.models.generateContent({
     model: "gemini-3-flash-preview",
@@ -96,24 +99,34 @@ export async function getRandomQuote(): Promise<Quote> {
 
   const text = response.text || "{}";
   const data = JSON.parse(text);
+  
+  // Inicia com fallback do Pexels
   let imageUrl = await getPexelsImage();
   
   try {
-    imageUrl = await generateQuoteImage(data.quote);
+    // Tenta gerar imagem com Gemini
+    const aiGeneratedImage = await generateQuoteImage(data.quote);
+    if (aiGeneratedImage) {
+      imageUrl = aiGeneratedImage;
+    }
   } catch (e) {
-    console.warn("Falha ao gerar imagem, usando Pexels.");
+    console.warn("Sophia: Falha ao gerar imagem com Gemini, usando Pexels.");
   }
 
   return { ...data, id: generateId(), imageUrl };
 }
 
-export async function getTopicDescription(theme: string): Promise<string> {
+export async function getTopicDescription(query: string, isReference: boolean = false): Promise<string> {
   const ai = getAIInstance();
-  if (!process.env.GEMINI_API_KEY) return "Sabedoria em busca de conexão...";
+  if (!ai) return "Sabedoria em busca de conexão...";
   
+  const prompt = isReference 
+    ? `Descreva brevemente em 100 caracteres o contexto filosófico de "${query}". Seja minimalista.`
+    : `Descreva em 100 caracteres a essência de "${query}". Seja minimalista.`;
+
   const response = await ai.models.generateContent({
     model: "gemini-3-flash-preview",
-    contents: `Descreva em 100 caracteres a essência de "${theme}". Seja minimalista.`,
+    contents: prompt,
     config: {
       thinkingConfig: { thinkingLevel: ThinkingLevel.LOW }
     }
@@ -123,7 +136,7 @@ export async function getTopicDescription(theme: string): Promise<string> {
 
 export async function getPhilosophicalQuotes(theme: string): Promise<Quote[]> {
   const ai = getAIInstance();
-  if (!process.env.GEMINI_API_KEY) throw new Error("API_KEY_MISSING");
+  if (!ai) throw new Error("API_KEY_MISSING");
 
   const response = await ai.models.generateContent({
     model: "gemini-3-flash-preview",
@@ -155,13 +168,52 @@ export async function getPhilosophicalQuotes(theme: string): Promise<Quote[]> {
   })));
 }
 
-export async function generateQuoteImage(quoteText: string): Promise<string> {
+export async function getQuotesByReference(reference: string): Promise<Quote[]> {
   const ai = getAIInstance();
-  if (!process.env.GEMINI_API_KEY) return getPexelsImage();
+  if (!ai) throw new Error("API_KEY_MISSING");
 
+  const response = await ai.models.generateContent({
+    model: "gemini-3-flash-preview",
+    contents: `Gere 3 pensamentos ou citações filosóficas baseadas na referência '${reference}'. A referência pode conter um filósofo e um tema (ex: Platão, Justiça). Tente encontrar citações reais ou inspiradas no estilo desse pensador sobre esse tema. Retorne um array JSON de objetos com 'quote' e 'author' (pensador).`,
+    config: {
+      thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.ARRAY,
+        items: {
+          type: Type.OBJECT,
+          properties: {
+            quote: { type: Type.STRING },
+            author: { type: Type.STRING },
+          },
+          required: ["quote", "author"],
+        }
+      },
+    },
+  });
+
+  const text = response.text || "[]";
+  const parsed = JSON.parse(text);
+  
+  return Promise.all(parsed.map(async (q: any) => ({ 
+    ...q, 
+    id: generateId(), 
+    imageUrl: await getPexelsImage() 
+  })));
+}
+
+export async function generateQuoteImage(quoteText: string): Promise<string> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    console.warn("Sophia: GEMINI_API_KEY não encontrada, usando Pexels.");
+    return getPexelsImage();
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
   const randomStyle = VISUAL_STYLES[Math.floor(Math.random() * VISUAL_STYLES.length)];
 
   try {
+    console.log("Sophia: Iniciando geração de imagem com Gemini...");
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash-image',
       contents: { 
@@ -181,10 +233,13 @@ export async function generateQuoteImage(quoteText: string): Promise<string> {
 
     const part = response.candidates?.[0]?.content?.parts?.find(p => p.inlineData);
     if (part?.inlineData?.data) {
+      console.log("Sophia: Imagem gerada com sucesso.");
       return `data:image/jpeg;base64,${part.inlineData.data}`;
     }
+    console.warn("Sophia: Gemini não retornou dados de imagem, usando Pexels.");
     return getPexelsImage();
   } catch (e) {
+    console.error("Sophia: Erro ao gerar imagem com Gemini:", e);
     return getPexelsImage();
   }
 }

@@ -4,22 +4,32 @@
 @tailwind utilities;
 
 :root {
-  --accent-gold: #FFD700;
-  --navy-deep: #000033;
-  --navy-light: #000066;
+  --bg-academy: #F2F0E9;
+  --text-academy: #2B2B2B;
+  --primary-academy: #1C5D99;
+  --secondary-academy: #D4B483;
+  --cta-academy: #B76E55;
 }
 
 body {
   font-family: 'Inter', sans-serif;
-  background-color: #f8fafc;
+  background-color: var(--bg-academy);
   overscroll-behavior-y: contain;
-  color: #1e293b;
+  color: var(--text-academy);
   margin: 0;
   -webkit-font-smoothing: antialiased;
 }
 
 .font-serif-display {
   font-family: 'Cormorant Garamond', serif;
+}
+
+.font-title {
+  font-family: 'Playfair Display', serif;
+}
+
+.font-script {
+  font-family: 'Dancing Script', cursive;
 }
 
 .font-title {
@@ -33,10 +43,6 @@ body {
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
-}
-
-.bg-navy-gradient {
-  background: linear-gradient(to right, #000033, #000066);
 }
 
 @keyframes slideUpFade {

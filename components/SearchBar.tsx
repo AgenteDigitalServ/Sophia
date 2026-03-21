@@ -7,31 +7,38 @@ interface SearchBarProps {
   setSearchTerm: (term: string) => void;
   onSearch: () => void;
   isLoading: boolean;
+  placeholder?: string;
 }
 
-export const SearchBar: React.FC<SearchBarProps> = ({ searchTerm, setSearchTerm, onSearch, isLoading }) => {
+export const SearchBar: React.FC<SearchBarProps> = ({ 
+  searchTerm, 
+  setSearchTerm, 
+  onSearch, 
+  isLoading,
+  placeholder = "Digite uma palavra-chave (ex: Amor, Fé, Paz)..."
+}) => {
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') onSearch();
   };
 
   return (
-    <div className="relative flex items-center bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden animate-reveal">
-      <div className="pl-4 flex items-center pointer-events-none">
-        <SearchIcon className="w-5 h-5 text-gray-400" />
+    <div className="relative flex items-center bg-white/80 rounded-none border border-[#1C5D99]/20 shadow-sm overflow-hidden animate-reveal">
+      <div className="pl-5 flex items-center pointer-events-none">
+        <SearchIcon className="w-5 h-5 text-[#1C5D99]/40" />
       </div>
       <input
         type="text"
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder="Digite uma palavra-chave (ex: Amor, Fé, Paz)..."
+        placeholder={placeholder}
         disabled={isLoading}
-        className="w-full bg-transparent py-4 pl-3 pr-4 text-[14px] text-gray-800 placeholder-gray-400 focus:outline-none transition-all"
+        className="w-full bg-transparent py-5 pl-4 pr-4 text-[14px] text-[#2B2B2B] placeholder-[#2B2B2B]/40 focus:outline-none transition-all font-medium"
       />
       <button
         onClick={onSearch}
         disabled={isLoading}
-        className="mr-2 bg-[#000080] hover:bg-[#000066] text-white px-6 py-2 rounded-lg text-sm font-bold transition-all active:scale-95 disabled:opacity-50"
+        className="mr-3 bg-[#B76E55] hover:bg-[#9E5A44] text-white px-4 sm:px-8 py-3 rounded-none text-[10px] font-bold uppercase tracking-[0.2em] transition-all active:scale-95 disabled:opacity-50 shadow-md"
       >
         {isLoading ? '...' : 'Buscar'}
       </button>

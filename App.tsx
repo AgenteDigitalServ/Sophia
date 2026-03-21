@@ -3,9 +3,9 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { SearchBar } from './components/SearchBar';
 import { QuoteCard } from './components/QuoteCard';
 import { Spinner } from './components/Spinner';
-import { getPhilosophicalQuotes, getRandomQuote, generateQuoteImage, getTopicDescription } from './services/geminiService';
+import { getPhilosophicalQuotes, getRandomQuote, generateQuoteImage, getTopicDescription, getQuotesByReference } from './services/geminiService';
 import type { Quote } from './types';
-import { BookIcon, SearchIcon, StarIcon, HistoryIcon, DownloadIcon } from './components/Icons';
+import { BookIcon, SearchIcon, StarIcon, HistoryIcon, DownloadIcon, RefreshIcon } from './components/Icons';
 
 type ViewState = 'search' | 'favorites' | 'history';
 
@@ -91,9 +91,12 @@ const App: React.FC = () => {
     setCurrentView('search');
 
     try {
+      const isReference = activeTab === 'reference';
       const [description, fetchedQuotes] = await Promise.all([
-        getTopicDescription(searchTerm),
-        getPhilosophicalQuotes(searchTerm)
+        getTopicDescription(searchTerm, isReference),
+        !isReference
+          ? getPhilosophicalQuotes(searchTerm) 
+          : getQuotesByReference(searchTerm)
       ]);
       setTopicDescription(description);
 
@@ -144,74 +147,77 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="bg-[#f8fafc] min-h-screen text-gray-800 flex justify-center selection:bg-blue-500/30">
-      <div className="w-full max-w-2xl min-h-screen flex flex-col relative overflow-x-hidden">
+    <div className="bg-[#F2F0E9] min-h-screen text-[#2B2B2B] flex justify-center selection:bg-[#1C5D99]/20">
+      <div className="w-full max-w-2xl min-h-screen flex flex-col relative overflow-x-hidden px-4 sm:px-10">
         
-        {/* Superior Header - Navy Blue Gradient */}
-        <header className="bg-navy-gradient px-6 py-6 shadow-lg">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-full border-2 border-[#FFD700] flex items-center justify-center bg-transparent">
-                <BookIcon className="w-8 h-8 text-[#FFD700]" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-title font-bold text-[#FFD700] tracking-wider leading-tight">SOPHIA</h1>
-                <p className="text-[10px] text-white/70 tracking-[0.2em] font-medium">SABEDORIA FILOSÓFICA</p>
-              </div>
+        {/* Superior Header - Academia de Platão Moderna */}
+        <header className="pt-10 sm:pt-16 pb-8 sm:pb-12">
+          <div className="flex flex-col items-center gap-6 sm:gap-10">
+            <div className="flex flex-col items-center gap-3 sm:gap-4">
+              <h1 className="text-3xl sm:text-4xl font-title text-[#1C5D99] tracking-tight font-bold text-center">
+                {activeTab === 'keyword' ? 'Pensamento do Dia' : 'Sabedoria Filosófica'}
+              </h1>
+              <div className="h-[2px] w-16 bg-[#D4B483]"></div>
+              <button 
+                onClick={fetchRandomQuote}
+                className="text-[#B76E55] hover:text-[#1C5D99] transition-colors flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.3em]"
+              >
+                <RefreshIcon className="w-3 h-3" /> Nova Reflexão
+              </button>
             </div>
             
-            <div className="flex bg-black/20 rounded-full p-1 border border-white/10">
+            <div className="flex bg-[#1C5D99]/5 rounded-none p-1 border border-[#1C5D99]/10 w-full max-w-[320px]">
               <button 
                 onClick={() => setCurrentView('search')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all ${currentView === 'search' ? 'bg-[#FFD700] text-[#000033]' : 'text-white/60'}`}
+                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-none text-[10px] font-bold uppercase tracking-[0.2em] transition-all ${currentView === 'search' ? 'bg-[#1C5D99] text-white shadow-md' : 'text-[#1C5D99]/60'}`}
               >
-                <SearchIcon className="w-4 h-4" /> Busca
-              </button>
-              <button 
-                onClick={() => setCurrentView('history')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all ${currentView === 'history' ? 'bg-[#FFD700] text-[#000033]' : 'text-white/60'}`}
-              >
-                <HistoryIcon className="w-4 h-4" /> Histórico
+                Busca
               </button>
               <button 
                 onClick={() => setCurrentView('favorites')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all ${currentView === 'favorites' ? 'bg-[#FFD700] text-[#000033]' : 'text-white/60'}`}
+                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-none text-[10px] font-bold uppercase tracking-[0.2em] transition-all ${currentView === 'favorites' ? 'bg-[#1C5D99] text-white shadow-md' : 'text-[#1C5D99]/60'}`}
               >
-                <StarIcon className="w-4 h-4" fill={currentView === 'favorites'} /> Favoritos
+                Favoritos
               </button>
             </div>
           </div>
         </header>
 
-        {/* Tabs Section */}
-        <div className="px-6 mt-8">
-          <div className="flex bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        {/* Tabs Section - Academy theme */}
+        <div className="mb-10">
+          <div className="flex border-b border-[#1C5D99]/10">
             <button 
-              onClick={() => setActiveTab('keyword')}
-              className={`flex-1 py-3 text-xs font-bold tracking-widest transition-all ${activeTab === 'keyword' ? 'bg-[#000080] text-white' : 'text-gray-400'}`}
+              onClick={() => {
+                setActiveTab('keyword');
+                setSearchTerm('');
+              }}
+              className={`flex-1 py-5 text-[10px] font-bold tracking-[0.3em] transition-all border-b-2 ${activeTab === 'keyword' ? 'border-[#B76E55] text-[#B76E55]' : 'border-transparent text-[#2B2B2B]/40'}`}
             >
               PALAVRA-CHAVE
             </button>
             <button 
-              onClick={() => setActiveTab('reference')}
-              className={`flex-1 py-3 text-xs font-bold tracking-widest transition-all ${activeTab === 'reference' ? 'bg-[#000080] text-white' : 'text-gray-400'}`}
+              onClick={() => {
+                setActiveTab('reference');
+                setSearchTerm('');
+              }}
+              className={`flex-1 py-5 text-[10px] font-bold tracking-[0.3em] transition-all border-b-2 ${activeTab === 'reference' ? 'border-[#B76E55] text-[#B76E55]' : 'border-transparent text-[#2B2B2B]/40'}`}
             >
               REFERÊNCIA
             </button>
           </div>
         </div>
         
-        <main className="flex-1 px-6 pb-12 space-y-8 overflow-y-auto scrollbar-hide mt-6">
+        <main className="flex-1 px-2 sm:px-6 pb-12 space-y-8 overflow-y-auto scrollbar-hide mt-4 sm:mt-6">
           {currentView === 'favorites' ? (
             <div className="animate-reveal space-y-8">
                 {favorites.length === 0 ? (
                     <div className="flex flex-col justify-center items-center py-40 text-center opacity-20">
-                        <StarIcon className="w-16 h-16 mb-6" />
-                        <p className="text-[10px] uppercase tracking-[0.4em] font-black italic">Sua coleção está vazia.</p>
+                        <StarIcon className="w-16 h-16 mb-6 text-[#D4B483]" />
+                        <p className="text-[10px] uppercase tracking-[0.4em] font-black italic text-[#2B2B2B]">Sua coleção está vazia.</p>
                     </div>
                 ) : (
                     <>
-                        <h2 className="font-serif-display text-2xl text-[#000080] italic border-b border-gray-200 pb-2">Minha Coleção</h2>
+                        <h2 className="font-serif-display text-2xl text-[#1C5D99] italic border-b border-[#D4B483]/30 pb-2">Minha Coleção</h2>
                         {favorites.map((fav) => (
                             <QuoteCard key={fav.id} quote={fav} isFavorite={true} onToggleFavorite={toggleFavorite} onRegenerateImage={handleRegenerateImage} />
                         ))}
@@ -220,35 +226,41 @@ const App: React.FC = () => {
             </div>
           ) : currentView === 'history' ? (
             <div className="animate-reveal space-y-8">
-                <h2 className="font-serif-display text-2xl text-[#000080] italic border-b border-gray-200 pb-2">Histórico de Buscas</h2>
+                <h2 className="font-serif-display text-2xl text-[#1C5D99] italic border-b border-[#D4B483]/30 pb-2">Histórico de Buscas</h2>
                 <div className="flex flex-col justify-center items-center py-40 text-center opacity-20">
-                    <HistoryIcon className="w-16 h-16 mb-6" />
-                    <p className="text-[10px] uppercase tracking-[0.4em] font-black italic">Nenhuma busca recente.</p>
+                    <HistoryIcon className="w-16 h-16 mb-6 text-[#D4B483]" />
+                    <p className="text-[10px] uppercase tracking-[0.4em] font-black italic text-[#2B2B2B]">Nenhuma busca recente.</p>
                 </div>
             </div>
           ) : (
             <div className="animate-reveal space-y-8">
-                <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} onSearch={handleSearch} isLoading={isLoading} />
+                <SearchBar 
+                  searchTerm={searchTerm} 
+                  setSearchTerm={setSearchTerm} 
+                  onSearch={handleSearch} 
+                  isLoading={isLoading} 
+                  placeholder={activeTab === 'keyword' ? "Amor, Fé, Paz..." : "Filósofo e Tema (ex: Platão, Justiça)..."}
+                />
 
-                <div className="flex items-center gap-2 text-[#000080] font-serif-display text-lg italic">
-                  <span>{">"}</span>
-                  <h2>SABEDORIA ENCONTRADA</h2>
+                <div className="flex items-center gap-4 text-[#1C5D99] font-title text-2xl">
+                  <div className="h-[2px] w-8 bg-[#D4B483]"></div>
+                  <h2>Sabedoria Encontrada</h2>
                 </div>
 
                 {isLoading ? (
                     <div className="flex flex-col justify-center items-center py-32">
-                      <Spinner className="w-10 h-10 text-[#000080]" />
-                      <p className="mt-6 text-[#000080]/60 text-[10px] uppercase tracking-[0.5em] font-black animate-pulse text-center">Buscando sabedoria...</p>
+                      <Spinner className="w-10 h-10 text-[#B76E55]" />
+                      <p className="mt-8 text-[#B76E55] text-[10px] uppercase tracking-[0.5em] font-bold animate-pulse text-center">Consultando o Oráculo...</p>
                     </div>
                 ) : error ? (
-                    <div className="py-20 text-center px-6">
-                        <p className="text-xs uppercase tracking-widest font-bold text-red-500 italic">{error}</p>
-                        <button onClick={resetToHome} className="mt-8 text-[#000080] text-[10px] font-black uppercase tracking-[0.3em]">Tentar novamente</button>
+                    <div className="py-20 text-center px-6 bg-white rounded-none border border-[#1C5D99]/10">
+                        <p className="text-xs uppercase tracking-[0.2em] font-bold text-[#B76E55] italic">{error}</p>
+                        <button onClick={resetToHome} className="mt-10 text-[#1C5D99]/60 hover:text-[#1C5D99] text-[10px] font-bold uppercase tracking-[0.3em] transition-colors underline underline-offset-8">Tentar novamente</button>
                     </div>
                 ) : quotes.length > 0 ? (
-                    <div className="space-y-10">
+                    <div className="space-y-16">
                         {topicDescription && (
-                          <p className="text-sm text-gray-500 italic font-serif-display leading-relaxed border-l-2 border-[#FFD700] pl-4 py-1">
+                          <p className="text-sm text-[#2B2B2B]/70 italic font-serif-display leading-relaxed border-l-2 border-[#D4B483] pl-6 py-2">
                             {topicDescription}
                           </p>
                         )}
@@ -263,18 +275,18 @@ const App: React.FC = () => {
                         ))}
                     </div>
                 ) : (
-                    <div className="flex flex-col justify-center items-center py-24 text-center border-2 border-dashed border-gray-200 rounded-3xl bg-white/50">
-                        <BookIcon className="w-16 h-16 mb-6 text-gray-200" />
-                        <p className="text-gray-400 text-sm font-medium italic">Nenhum versículo encontrado ainda.</p>
+                    <div className="flex flex-col justify-center items-center py-24 text-center border border-dashed border-[#1C5D99]/20 rounded-none bg-white/50">
+                        <BookIcon className="w-16 h-16 mb-8 text-[#1C5D99]/10" />
+                        <p className="text-[#1C5D99]/30 text-sm font-medium italic">O silêncio precede a sabedoria.</p>
                     </div>
                 )}
 
                 {/* Daily Suggestion */}
                 {!searchTerm && !isLoading && randomQuote && (
-                    <div className="pt-10 space-y-6">
-                        <div className="flex items-center gap-2 text-[#000080] font-serif-display text-lg italic">
-                          <span>{">"}</span>
-                          <h2>PENSAMENTO DO DIA</h2>
+                    <div className="pt-16 space-y-10">
+                        <div className="flex items-center gap-4 text-[#1C5D99] font-title text-2xl">
+                          <div className="h-[2px] w-8 bg-[#D4B483]"></div>
+                          <h2>Sugestão do Dia</h2>
                         </div>
                         <QuoteCard 
                             quote={randomQuote} 
