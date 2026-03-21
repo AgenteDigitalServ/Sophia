@@ -5,17 +5,18 @@
 
 :root {
   --bg-academy: #F2F0E9;
-  --text-academy: #2B2B2B;
-  --primary-academy: #1C5D99;
-  --secondary-academy: #D4B483;
-  --cta-academy: #B76E55;
+  --text-academy: #2C3E50;
+  --primary-academy: #2C3E50;
+  --secondary-academy: #7D8F69;
+  --cta-academy: #D4A373;
+  --body-academy: #6C757D;
 }
 
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Lora', serif;
   background-color: var(--bg-academy);
   overscroll-behavior-y: contain;
-  color: var(--text-academy);
+  color: var(--body-academy);
   margin: 0;
   -webkit-font-smoothing: antialiased;
 }
@@ -24,16 +25,30 @@ body {
   font-family: 'Cormorant Garamond', serif;
 }
 
-.font-title {
-  font-family: 'Playfair Display', serif;
+.font-decorative {
+  font-family: 'Cinzel Decorative', cursive;
 }
 
-.font-script {
-  font-family: 'Dancing Script', cursive;
+.font-body {
+  font-family: 'Lora', serif;
 }
 
-.font-title {
-  font-family: 'Playfair Display', serif;
+/* Greek Meander Pattern */
+.greek-meander {
+  background-color: transparent;
+  background-image: linear-gradient(90deg, #2C3E50 2px, transparent 2px),
+    linear-gradient(0deg, #2C3E50 2px, transparent 2px),
+    linear-gradient(90deg, #2C3E50 2px, transparent 2px),
+    linear-gradient(0deg, #2C3E50 2px, transparent 2px);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 0, 10px 10px, 10px 10px;
+  opacity: 0.1;
+}
+
+/* Aged Parchment Texture */
+.aged-parchment {
+  background-color: #F2F0E9;
+  background-image: url("https://www.transparenttextures.com/patterns/aged-paper.png");
 }
 
 .scrollbar-hide::-webkit-scrollbar {

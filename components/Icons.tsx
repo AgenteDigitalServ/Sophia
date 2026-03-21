@@ -60,6 +60,22 @@ export const StarIcon: React.FC<IconProps> = ({ className, fill }) => (
   </svg>
 );
 
+export const QuillIcon: React.FC<IconProps> = ({ className }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M21 3C21 3 17 3 14 6C11 9 10 13 10 13L3 20V21H4L11 14C11 14 15 13 18 10C21 7 21 3 21 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M14 6L18 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+export const LaurelIcon: React.FC<IconProps> = ({ className }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 21C12 21 12 18 12 15C12 12 15 9 18 9C21 9 21 12 21 12C21 12 21 15 18 15C15 15 12 18 12 21Z" fill="currentColor" fillOpacity="0.4"/>
+    <path d="M12 21C12 21 12 18 12 15C12 12 9 9 6 9C3 9 3 12 3 12C3 12 3 15 6 15C9 15 12 18 12 21Z" fill="currentColor" fillOpacity="0.4"/>
+    <path d="M12 15C12 15 12 12 12 9C12 6 15 3 18 3C21 3 21 6 21 6C21 6 21 9 18 9C15 9 12 12 12 15Z" fill="currentColor" fillOpacity="0.6"/>
+    <path d="M12 15C12 15 12 12 12 9C12 6 9 3 6 3C3 3 3 6 3 6C3 6 3 9 6 9C9 9 12 12 12 15Z" fill="currentColor" fillOpacity="0.6"/>
+  </svg>
+);
+
 export const SophiaIcon: React.FC<IconProps> = ({ className }) => (
     <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" fill="currentColor"/>

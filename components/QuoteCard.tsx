@@ -95,7 +95,7 @@ export const QuoteCard: React.FC<QuoteCardProps> = ({
     <div className="space-y-10 animate-reveal w-full pb-10">
       <div 
         ref={cardRef} 
-        className="relative w-full aspect-[4/5] rounded-none overflow-hidden shadow-xl bg-white border border-[#1C5D99]/10 flex flex-col group"
+        className="relative w-full aspect-[9/16] rounded-none overflow-hidden shadow-2xl bg-black border border-white/5 flex flex-col group"
       >
         {/* Visual Engine */}
         {quote.imageUrl ? (
@@ -108,24 +108,25 @@ export const QuoteCard: React.FC<QuoteCardProps> = ({
                   setHasImageError(true);
                   setIsImageLoaded(true);
                 }}
-                className={`absolute inset-0 w-full h-full object-cover transition-all duration-1000 ${isImageLoaded ? 'opacity-50 grayscale-[0.3] scale-100' : 'opacity-0 scale-110 blur-2xl'}`}
+                className={`absolute inset-0 w-full h-full object-cover transition-all duration-1000 ${isImageLoaded ? 'opacity-90 scale-100' : 'opacity-0 scale-110 blur-2xl'}`}
             />
-        ) : <div className="absolute inset-0 bg-[#F2F0E9]"></div>}
+        ) : <div className="absolute inset-0 aged-parchment"></div>}
 
-        {/* Cinematic Overlays - Academy theme */}
-        <div className="absolute inset-0 bg-[#F2F0E9]/40 z-10"></div>
-        <div className="absolute inset-0 bg-gradient-to-t from-[#F2F0E9] via-transparent to-[#F2F0E9]/20 z-10"></div>
+        {/* Cinematic Overlays - Natural & Enhanced */}
+        <div className="absolute inset-0 bg-black/20 z-10"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60 z-10"></div>
+        <div className="absolute inset-0 aged-parchment opacity-[0.05] z-15 pointer-events-none"></div>
         
         {/* Aesthetic Quote Content */}
-        <div className="absolute inset-0 flex flex-col justify-center px-6 sm:px-16 text-center z-20 pointer-events-none">
-            <div className="space-y-6 sm:space-y-10">
-              <blockquote className="font-title text-xl sm:text-4xl leading-relaxed text-[#1C5D99] font-bold drop-shadow-[0_2px_4px_rgba(255,255,255,0.8)] break-words">
+        <div className="absolute inset-0 flex flex-col justify-center px-8 sm:px-16 text-center z-20 pointer-events-none">
+            <div className="space-y-8 sm:space-y-12">
+              <blockquote className="font-serif-display text-2xl sm:text-5xl leading-tight text-white font-bold drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] break-words">
                   “{quote.quote}”
               </blockquote>
               
-              <div className="flex flex-col items-center gap-2 sm:gap-4">
-                <div className="h-[1px] sm:h-[2px] w-8 sm:w-12 bg-[#D4B483]"></div>
-                <cite className="text-[10px] sm:text-[12px] text-[#B76E55] not-italic tracking-[0.2em] sm:tracking-[0.4em] font-bold uppercase">
+              <div className="flex flex-col items-center gap-3 sm:gap-6">
+                <div className="h-[2px] w-12 sm:w-20 bg-[#F4C430]/80 shadow-[0_0_10px_rgba(244,196,48,0.5)]"></div>
+                <cite className="font-decorative text-[14px] sm:text-[18px] text-[#F4C430] not-italic tracking-[0.3em] sm:tracking-[0.5em] font-normal uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
                     {quote.author}
                 </cite>
               </div>
@@ -153,8 +154,8 @@ export const QuoteCard: React.FC<QuoteCardProps> = ({
         </div>
         
         {/* Minimal Signature */}
-        <div className="absolute bottom-12 left-0 right-0 flex justify-center items-center gap-3 opacity-20 z-20">
-          <span className="text-[9px] uppercase tracking-[1em] font-bold text-[#1C5D99]">SOPHIA</span>
+        <div className="absolute bottom-12 left-0 right-0 flex justify-center items-center gap-3 opacity-40 z-20">
+          <span className="font-decorative text-[10px] uppercase tracking-[1.2em] font-light text-[#2C3E50] drop-shadow-[0_1px_2px_rgba(255,255,255,0.5)]">SOPHIA</span>
         </div>
         
         {/* Elegant Loading Stage */}

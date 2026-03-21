@@ -22,9 +22,13 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   };
 
   return (
-    <div className="relative flex items-center bg-white/80 rounded-none border border-[#1C5D99]/20 shadow-sm overflow-hidden animate-reveal">
+    <div className="relative flex items-center bg-white/80 rounded-none border-y-2 border-[#2C3E50]/40 shadow-sm overflow-hidden animate-reveal">
+      {/* Scroll Decorative Ends */}
+      <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#D4A373]/40"></div>
+      <div className="absolute right-0 top-0 bottom-0 w-1 bg-[#D4A373]/40"></div>
+      
       <div className="pl-5 flex items-center pointer-events-none">
-        <SearchIcon className="w-5 h-5 text-[#1C5D99]/40" />
+        <SearchIcon className="w-5 h-5 text-[#2C3E50]/40" />
       </div>
       <input
         type="text"
@@ -33,14 +37,14 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
         disabled={isLoading}
-        className="w-full bg-transparent py-5 pl-4 pr-4 text-[14px] text-[#2B2B2B] placeholder-[#2B2B2B]/40 focus:outline-none transition-all font-medium"
+        className="w-full bg-transparent py-5 pl-4 pr-4 text-[14px] text-[#6C757D] placeholder-[#6C757D]/40 focus:outline-none transition-all font-body font-medium"
       />
       <button
         onClick={onSearch}
         disabled={isLoading}
-        className="mr-3 bg-[#B76E55] hover:bg-[#9E5A44] text-white px-4 sm:px-8 py-3 rounded-none text-[10px] font-bold uppercase tracking-[0.2em] transition-all active:scale-95 disabled:opacity-50 shadow-md"
+        className="mr-3 bg-[#D4A373] hover:bg-[#C08F5E] text-white px-4 sm:px-8 py-3 rounded-none text-[11px] font-decorative font-bold uppercase tracking-[0.2em] transition-all active:scale-95 disabled:opacity-50 shadow-md"
       >
-        {isLoading ? '...' : 'Buscar'}
+        {isLoading ? '...' : 'BUSCAR'}
       </button>
     </div>
   );
